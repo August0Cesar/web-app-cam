@@ -43,11 +43,34 @@
 
         camera_button.addEventListener('click', async function () {
             canvas.style.display = "none";
-            video.style.display = "";
+            video.style.display = "";            
 
+            // camera Default
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then((mediaStream) => {
+
+                    video.srcObject = mediaStream;
+                    enableMultiplesCameras();
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        });
+
+        click_button.addEventListener('click', function () {
+            video.style.display = "none";
+            canvas.style.display = "";
+
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            let image_data_url = canvas.toDataURL('image/jpeg');
+
+        });
+
+        async function enableMultiplesCameras(){
             let cameras = await navigator.mediaDevices.enumerateDevices();
-            let camButtons = "";
+            console.log(cameras);
 
+            let camButtons = "";
             cameras.forEach((cam) => {
                 if (cam.kind == DEVICE_TYPE_CAMERA) {
                     camButtons += `<button onclick="changeCamera('${cam.deviceId}')">${cam.label}</button>`;
@@ -63,28 +86,7 @@
             if (cameras.length > 1) {
                 containerCameraOptions.style.display = "";
             }
-
-            let deviceCamId = cameras.length > 1 ? cameras[1].deviceId : cameras[0].deviceId;
-
-            // camera Default
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                .then((mediaStream) => {
-                    video.srcObject = mediaStream;
-                })
-                .catch((error) => {
-                    console.log(error);
-                });
-        });
-
-        click_button.addEventListener('click', function () {
-            video.style.display = "none";
-            canvas.style.display = "";
-            
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            let image_data_url = canvas.toDataURL('image/jpeg');
-
-        });
-
+        }
 
         async function changeCamera(deviceCamId) {
             let videoSetting = { deviceId: { exact: deviceCamId } };
