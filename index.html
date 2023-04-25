@@ -10,8 +10,9 @@
 
     <style>
         canvas {
-            width: 100%;
-            object-fit: contain;
+            /* width: 100%;
+            object-fit: contain; */
+            border: solid 1px blue;
         }
 
         video {
@@ -28,9 +29,9 @@
     <div id="content-cameras" style="display: none;">
         Cameras Disponiveis
     </div>
-    <video id="video" width="320" height="240" autoplay playsinline></video>
+    <video id="video"  autoplay playsinline></video>
     <button id="click-photo">Click Photo</button>
-    <canvas id="canvas" height="360" style="display: none;"></canvas>
+    <canvas id="canvas" style="display: none;"></canvas><!--width="320" height="240" -->
 
     <script>
         const DEVICE_TYPE_CAMERA = "videoinput";
@@ -43,10 +44,17 @@
 
         camera_button.addEventListener('click', async function () {
             canvas.style.display = "none";
-            video.style.display = "";            
+            video.style.display = "";
 
             // camera Default
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            let videoSetting = {
+                facingMode: "user",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+            navigator.mediaDevices.getUserMedia({
+                video: videoSetting, audio: false
+            })
                 .then((mediaStream) => {
 
                     video.srcObject = mediaStream;
@@ -58,17 +66,22 @@
         });
 
         click_button.addEventListener('click', function () {
+
+            canvas.width = video.offsetWidth;//video.width;
+            canvas.height = video.offsetHeight;//video.height;
+
             video.style.display = "none";
             canvas.style.display = "";
 
+
+            //console.log(`Resolucao canvas w: ${canvas.width} - h: ${canvas.height}`)
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
             let image_data_url = canvas.toDataURL('image/jpeg');
 
         });
 
-        async function enableMultiplesCameras(){
+        async function enableMultiplesCameras() {
             let cameras = await navigator.mediaDevices.enumerateDevices();
-            console.log(cameras);
 
             let camButtons = "";
             cameras.forEach((cam) => {
@@ -91,7 +104,7 @@
         async function changeCamera(deviceCamId) {
 
             video.srcObject.getTracks().forEach(track => {
-                if(track != undefined){
+                if (track != undefined) {
                     console.log('Parando camera aberta');
                     track.stop();
                 }
@@ -99,7 +112,11 @@
 
             video.srcObject = null;
 
-            let videoSetting = { deviceId: { exact: deviceCamId } };
+            let videoSetting = {
+                deviceId: { exact: deviceCamId },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            };
 
             navigator.mediaDevices.getUserMedia({ video: videoSetting, audio: false })
                 .then((mediaStream) => {
