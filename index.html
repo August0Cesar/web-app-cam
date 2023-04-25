@@ -89,6 +89,16 @@
         }
 
         async function changeCamera(deviceCamId) {
+
+            video.srcObject.getTracks().forEach(track => {
+                if(track != undefined){
+                    console.log('Parando camera aberta');
+                    track.stop();
+                }
+            });
+
+            video.srcObject = null;
+
             let videoSetting = { deviceId: { exact: deviceCamId } };
 
             navigator.mediaDevices.getUserMedia({ video: videoSetting, audio: false })
