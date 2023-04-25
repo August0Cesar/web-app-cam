@@ -13,7 +13,7 @@
             width: 100%;
             object-fit: contain;
         }
-        
+
         video {
             border: solid 1px blue;
             width: 100%;
@@ -25,30 +25,68 @@
 <body>
 
     <button id="start-camera">Start Camera</button>
+    <div id="content-cameras" style="display: none;">
+        Cameras Disponiveis
+    </div>
     <video id="video" width="320" height="240" autoplay playsinline></video>
     <button id="click-photo">Click Photo</button>
-    <canvas id="canvas"  height="360" style="display: none;"></canvas>
+    <canvas id="canvas" height="360" style="display: none;"></canvas>
 
     <script>
+        const DEVICE_TYPE_CAMERA = "videoinput";
+
         let camera_button = document.querySelector("#start-camera");
         let video = document.querySelector("#video");
         let click_button = document.querySelector("#click-photo");
         let canvas = document.querySelector("#canvas");
+        let containerCameraOptions = document.getElementById("content-cameras");
 
         camera_button.addEventListener('click', async function () {
             canvas.style.display = "none";
             video.style.display = "";
 
             let cameras = await navigator.mediaDevices.enumerateDevices();
+            let camButtons = "";
 
-            cameras = cameras.filter((cam) =>{
-                return cam.kind == "videoinput";
+            cameras.forEach((cam) => {
+                if (cam.kind == DEVICE_TYPE_CAMERA) {
+                    camButtons += `<button onclick="changeCamera('${cam.deviceId}')">${cam.label}</button>`;
+                }
             });
-            
-            console.log(cameras);
+
+            containerCameraOptions.innerHTML = camButtons;
+
+            cameras = cameras.filter((cam) => {
+                return cam.kind == DEVICE_TYPE_CAMERA;
+            });
+
+            if (cameras.length > 1) {
+                containerCameraOptions.style.display = "";
+            }
 
             let deviceCamId = cameras.length > 1 ? cameras[1].deviceId : cameras[0].deviceId;
 
+            // camera Default
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then((mediaStream) => {
+                    video.srcObject = mediaStream;
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        });
+
+        click_button.addEventListener('click', function () {
+            video.style.display = "none";
+            canvas.style.display = "";
+            
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            let image_data_url = canvas.toDataURL('image/jpeg');
+
+        });
+
+
+        async function changeCamera(deviceCamId) {
             let videoSetting = { deviceId: { exact: deviceCamId } };
 
             navigator.mediaDevices.getUserMedia({ video: videoSetting, audio: false })
@@ -58,26 +96,7 @@
                 .catch((error) => {
                     console.log(error);
                 });
-            
-            //camera frontall    
-            // navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            //     .then((mediaStream) => {
-            //         video.srcObject = mediaStream;
-            //     })
-            //     .catch((error) => {
-            //         console.log(error);
-            //     });
-        });
-
-        click_button.addEventListener('click', function () {
-            video.style.display = "none";
-            console.log(canvas.height);
-            canvas.style.display = "";
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            let image_data_url = canvas.toDataURL('image/jpeg');
-
-        });
-
+        }
 
     </script>
 
